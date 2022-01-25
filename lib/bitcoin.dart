@@ -15,58 +15,63 @@ class _BitcoinState extends State<Bitcoin> {
   String _preco = "0";
 
   
-  void _recuperarPreco() async {
+  Future<Map> _recuperarPreco() async {
     String urlBitcoin = 'https://blockchain.info/ticker';
     
-    http.Response response = await http.get(urlBitcoin);
+    http.Response response = await http.get(Uri.parse(urlBitcoin));
 
-    Map<String, dynamic> retornoApi = json.decode(response.body);
-
-    setState(() {
-      _preco = retornoApi["BRL"]["buy"].toString();
-    });
-
-
-
+    return json.decode(response.body);
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        padding: const EdgeInsets.all(32),
-        child: Center(
-          child: Column(
+    return FutureBuilder<Map>(
+      future: _recuperarPreco(),
+      builder: (context, snapshot) {
+        String resultado = '';
+        switch(snapshot.connectionState) {
+          case ConnectionState.none:
+            break;
+            case ConnectionState.waiting:
+              resultado = "Carregando...";
+              break;
+            case ConnectionState.active:
+            case ConnectionState.done:
+              resultado = "Conexão concluída";
+              if(snapshot.hasError) {
+                resultado = "Erro ao carregar os dados";
+              } else {
+                double valor = snapshot.data?['BRL']['buy'];
+                resultado = "${valor.toString()}";
+              }
+              break;
+        }
+
+        return Scaffold(
+          backgroundColor: Colors.green,
+          body: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Image.asset('images/bitcoin/bitcoin.png'),
-              Padding(
-                padding: const EdgeInsets.only(top: 30, bottom: 30),
+              const Center(
                 child: Text(
-                  "R\$ " + _preco,
-                  style: const TextStyle(
-                    fontSize: 35
-                  ),
-                )
-              ),
-              ElevatedButton(
-                onPressed: _recuperarPreco, 
-                child: const Text(
-                  "Atualizar", 
+                  "Preço do bitcoin: ",
                   style: TextStyle(
-                    fontSize: 20,
-                    color: Colors.white
+                    fontSize: 36
+                  ),
+                  ),
+              ),
+              Center(
+                child: Text(
+                  "R\$ $resultado",
+                  style: const TextStyle(
+                    fontSize: 26
                   ),
                 ),
-                style: ElevatedButton.styleFrom(
-                  primary: Colors.orange,
-                  padding: const EdgeInsets.fromLTRB(30, 15, 30, 15)
-                ),
-              )
+              ),
             ],
           ),
-        )
-      ),
+        );
+      },
     );
   }
 }

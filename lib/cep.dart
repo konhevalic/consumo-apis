@@ -18,10 +18,10 @@ class _CepState extends State<Cep> {
 
     
     String cep = _controllerCep.text;
-    String urlCep = "https://viacep.com.br/ws/$cep/json/";
+    String? urlCep = "https://viacep.com.br/ws/$cep/json/";
 
     http.Response response;
-    response = await http.get(urlCep);
+    response = await http.get(Uri.parse(urlCep));
 
     Map<String, dynamic> retornoApi = json.decode(response.body);
 
